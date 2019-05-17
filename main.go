@@ -281,7 +281,7 @@ func hiddenMember(m types.Member, c generatorConfig) bool {
 	return false
 }
 
-func typeIdentifier(pkg *types.Package, t *types.Type, c generatorConfig) string {
+func typeIdentifier(apiVersion string, t *types.Type, c generatorConfig) string {
 	tt := t
 	for tt.Elem != nil {
 		tt = tt.Elem
@@ -289,16 +289,14 @@ func typeIdentifier(pkg *types.Package, t *types.Type, c generatorConfig) string
 	if !isLocalType(t) {
 		return tt.Name.String() // {PackagePath.Name}
 	}
-	// groupName_apiVersion_Name
-	// assumes last part (i.e. v1 in core/v1) is apiVersion
-	return fmt.Sprintf("%s_%s_%s", groupName(pkg), pkg.Name, tt.Name.Name)
+	return fmt.Sprintf("%s.%s", apiVersion, tt.Name.Name)
 }
 
 // linkForType returns an anchor to the type if it can be generated. returns
 // empty string if it is not a local type or unrecognized external type.
-func linkForType(pkg *types.Package, t *types.Type, c generatorConfig) (string, error) {
+func linkForType(apiVersion string, t *types.Type, c generatorConfig) (string, error) {
 	if isLocalType(t) {
-		return "#" + typeIdentifier(pkg, t, c), nil
+		return "#" + typeIdentifier(apiVersion, t, c), nil
 	}
 
 	var arrIndex = func(a []string, i int) string {
@@ -347,11 +345,8 @@ func linkForType(pkg *types.Package, t *types.Type, c generatorConfig) (string, 
 	return "", nil
 }
 
-func typeDisplayName(pkg *types.Package, t *types.Type, c generatorConfig) string {
-	s := typeIdentifier(pkg, t, c)
-	if isLocalType(t) {
-		s = t.Name.Name
-	}
+func typeDisplayName(apiVersion string, t *types.Type, c generatorConfig) string {
+	s := typeIdentifier(apiVersion, t, c)
 	if t.Kind == types.Pointer {
 		s = strings.TrimLeft(s, "*")
 	}
@@ -496,14 +491,14 @@ func render(w io.Writer, pkgs []*types.Package, config generatorConfig) error {
 		"isExportedType":     isExportedType,
 		"fieldName":          fieldName,
 		"fieldEmbedded":      fieldEmbedded,
-		"typeIdentifier":     func(t *types.Type) string { return typeIdentifier(pkgs[t.Name.Package], t, config) },
-		"typeDisplayName":    func(t *types.Type) string { return typeDisplayName(pkgs[t.Name.Package], t, config) },
+		"typeIdentifier":     func(t *types.Type) string { return typeIdentifier(apiVersions[t.Name.Package], t, config) },
+		"typeDisplayName":    func(t *types.Type) string { return typeDisplayName(apiVersions[t.Name.Package], t, config) },
 		"visibleTypes":       func(t []*types.Type) []*types.Type { return visibleTypes(t, config) },
 		"renderComments":     func(s []string) string { return renderComments(s, !config.MarkdownDisabled) },
 		"packageDisplayName": packageDisplayName,
 		"apiGroup":           func(t *types.Type) string { return apiVersions[t.Name.Package] },
 		"linkForType": func(t *types.Type) string {
-			v, err := linkForType(pkgs[t.Name.Package], t, config)
+			v, err := linkForType(apiVersions[t.Name.Package], t, config)
 			if err != nil {
 				klog.Fatal(errors.Wrapf(err, "error getting link for type=%s", t.Name))
 				return ""
