@@ -496,14 +496,14 @@ func render(w io.Writer, pkgs []*types.Package, config generatorConfig) error {
 		"isExportedType":     isExportedType,
 		"fieldName":          fieldName,
 		"fieldEmbedded":      fieldEmbedded,
-		"typeIdentifier":     func(t *types.Type) string { return typeIdentifier(apiVersions[t.Name.Package], t, config) },
-		"typeDisplayName":    func(t *types.Type) string { return typeDisplayName(apiVersions[t.Name.Package], t, config) },
+		"typeIdentifier":     func(t *types.Type) string { return typeIdentifier(pkgs[t.Name.Package], t, config) },
+		"typeDisplayName":    func(t *types.Type) string { return typeDisplayName(pkgs[t.Name.Package], t, config) },
 		"visibleTypes":       func(t []*types.Type) []*types.Type { return visibleTypes(t, config) },
 		"renderComments":     func(s []string) string { return renderComments(s, !config.MarkdownDisabled) },
 		"packageDisplayName": packageDisplayName,
 		"apiGroup":           func(t *types.Type) string { return apiVersions[t.Name.Package] },
 		"linkForType": func(t *types.Type) string {
-			v, err := linkForType(apiVersions[t.Name.Package], t, config)
+			v, err := linkForType(pkgs[t.Name.Package], t, config)
 			if err != nil {
 				klog.Fatal(errors.Wrapf(err, "error getting link for type=%s", t.Name))
 				return ""
