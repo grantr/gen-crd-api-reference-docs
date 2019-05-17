@@ -311,7 +311,7 @@ func linkForType(apiVersion string, t *types.Type, c generatorConfig) (string, e
 	// k8s.io/api/core/v1.Container, k8s.io/api/autoscaling/v1.CrossVersionObjectReference,
 	// github.com/knative/build/pkg/apis/build/v1alpha1.BuildSpec
 	if t.Kind == types.Struct || t.Kind == types.Pointer || t.Kind == types.Interface || t.Kind == types.Alias {
-		id := typeIdentifier(pkg, t, c)                // gives {{ImportPath.Identifier}} for type
+		id := typeIdentifier(apiVersion, t, c)         // gives {{ImportPath.Identifier}} for type
 		segments := strings.Split(t.Name.Package, "/") // to parse [meta, v1] from "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 		for _, v := range c.ExternalPackages {
